@@ -32,14 +32,16 @@ class SocialLoginButton extends StatelessWidget {
       height: height ?? AppSizes.buttonHeightLg,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        color: isEnabled && !isLoading ? providerData.backgroundColor : AppColors.grey400,
+        color: isEnabled && !isLoading
+            ? providerData.backgroundColor
+            : AppColors.grey400,
         border: provider == SocialProvider.apple
             ? Border.all(color: AppColors.grey300, width: 1)
             : null,
         boxShadow: isEnabled && !isLoading
             ? [
                 BoxShadow(
-                  color: providerData.backgroundColor.withOpacity(0.2),
+                  color: providerData.backgroundColor.withValues(alpha: 0.2),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

@@ -31,7 +31,7 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: width ?? double.infinity,
       height: height ?? AppSizes.buttonHeightLg,
@@ -41,19 +41,19 @@ class PrimaryButton extends StatelessWidget {
             ? LinearGradient(
                 colors: [
                   backgroundColor ?? AppColors.primary,
-                  (backgroundColor ?? AppColors.primary).withOpacity(0.8),
+                  (backgroundColor ?? AppColors.primary).withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : null,
-        color: (!isEnabled || isLoading)
-            ? AppColors.grey400
-            : null,
+        color: (!isEnabled || isLoading) ? AppColors.grey400 : null,
         boxShadow: isEnabled && !isLoading
             ? [
                 BoxShadow(
-                  color: (backgroundColor ?? AppColors.primary).withOpacity(0.3),
+                  color: (backgroundColor ?? AppColors.primary).withValues(
+                    alpha: 0.3,
+                  ),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -63,7 +63,9 @@ class PrimaryButton extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(borderRadius ?? AppSizes.radiusMd),
+          borderRadius: BorderRadius.circular(
+            borderRadius ?? AppSizes.radiusMd,
+          ),
           onTap: isEnabled && !isLoading ? onPressed : null,
           child: Container(
             padding: const EdgeInsets.symmetric(

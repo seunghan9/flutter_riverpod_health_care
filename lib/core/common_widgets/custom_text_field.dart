@@ -71,8 +71,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
           Text(
             widget.labelText!,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: isDarkMode 
-                  ? AppColors.darkTextSecondary 
+              color: isDarkMode
+                  ? AppColors.darkTextSecondary
                   : AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
@@ -92,14 +92,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 color: widget.errorText != null
                     ? AppColors.error
                     : _isFocused
-                        ? AppColors.primary
-                        : Colors.transparent,
+                    ? AppColors.primary
+                    : Colors.transparent,
                 width: 2,
               ),
               boxShadow: _isFocused
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -121,24 +121,26 @@ class _CustomTextFieldState extends State<CustomTextField> {
               focusNode: widget.focusNode,
               textInputAction: widget.textInputAction,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: isDarkMode 
-                    ? AppColors.darkTextPrimary 
+                color: isDarkMode
+                    ? AppColors.darkTextPrimary
                     : AppColors.textPrimary,
               ),
               decoration: InputDecoration(
                 hintText: widget.hintText,
                 hintStyle: TextStyle(
-                  color: isDarkMode 
-                      ? AppColors.darkTextTertiary 
+                  color: isDarkMode
+                      ? AppColors.darkTextTertiary
                       : AppColors.textTertiary,
                 ),
                 prefixIcon: widget.prefixIcon,
                 suffixIcon: widget.obscureText
                     ? IconButton(
                         icon: Icon(
-                          _obscureText ? Icons.visibility_off : Icons.visibility,
-                          color: isDarkMode 
-                              ? AppColors.darkTextSecondary 
+                          _obscureText
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: isDarkMode
+                              ? AppColors.darkTextSecondary
                               : AppColors.textSecondary,
                         ),
                         onPressed: () {
@@ -149,8 +151,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                       )
                     : widget.suffixIcon,
                 filled: true,
-                fillColor: isDarkMode 
-                    ? AppColors.darkBackgroundSecondary 
+                fillColor: isDarkMode
+                    ? AppColors.darkBackgroundSecondary
                     : AppColors.backgroundSecondary,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -185,9 +187,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           const SizedBox(height: AppSizes.spaceSm),
           Text(
             widget.errorText!,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.error,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.error),
           ),
         ],
       ],

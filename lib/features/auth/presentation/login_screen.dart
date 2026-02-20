@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/common_widgets/primary_button.dart';
-import '../../../core/common_widgets/custom_text_field.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/util/navigation_helper.dart';
 import '../providers/auth_provider.dart';
+import 'widgets/auth_animations_mixin.dart';
+import 'widgets/welcome_section.dart';
+import 'widgets/social_login_section.dart';
+import 'widgets/email_login_form.dart';
+import 'widgets/auth_bottom_links.dart';
+import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -13,94 +19,129 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _onLoginPressed() {
-    if (!_formKey.currentState!.validate()) return;
-
-    ref
-        .read(authProvider.notifier)
-        .login(_emailController.text, _passwordController.text);
-  }
+class _LoginScreenState extends ConsumerState<LoginScreen> 
+    with SingleTickerProviderStateMixin, AuthAnimationsMixin {
+  bool _isEmailLogin = false;
 
   @override
   Widget build(BuildContext context) {
-    // ViewModel의 상태를 구독
     final authState = ref.watch(authProvider);
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    // 에러 발생 시
-    ref.listen(authProvider, (previous, next) {
-      next.whenOrNull(
-        error: (error, _) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        ),
-        data: (_) {
-          // 성공 시 로직
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('환영합니다!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        },
-      );
-    });
+    _setupAuthListener();
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppColors.darkBackground
-          : AppColors.background,
+      backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLg),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: AppSizes.spaceXxl),
-                // 폼 영역
-                CustomTextField(
-                  controller: _emailController,
-                  labelText: '이메일',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  validator: (v) => v!.isEmpty ? '이메일을 입력해주세요' : null,
-                ),
-                const SizedBox(height: AppSizes.spaceMd),
-                CustomTextField(
-                  controller: _passwordController,
-                  labelText: '비밀번호',
-                  obscureText: true,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  validator: (v) => v!.length < 6 ? '6자 이상 입력해주세요' : null,
-                ),
-
-                const SizedBox(height: AppSizes.spaceLg),
-                PrimaryButton(
-                  text: '로그인',
-                  onPressed: _onLoginPressed,
-                  isLoading: authState.isLoading, // Notifier가 로딩 중인지 알려줌
-                  isEnabled: !authState.isLoading,
-                ),
-              ],
+          child: Container(
+            height: screenHeight - MediaQuery.of(context).padding.top,
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLg),
+            child: FadeTransition(
+              opacity: fadeAnimation,
+              child: Column(
+                children: [
+                  // 상단 로고 및 환영 메시지 영역 (40%)
+                  Expanded(
+                    flex: 4,
+                    child: WelcomeSection(
+                      scaleAnimation: scaleAnimation,
+                      slideAnimation: slideAnimation,
+                    ),
+                  ),
+                  
+                  // 로그인 영역 (60%)
+                  Expanded(
+                    flex: 6,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            child: _isEmailLogin
+                                ? _buildEmailLoginView(authState)
+                                : _buildSocialLoginView(),
+                          ),
+                        ),
+                        
+                        // 하단 링크들
+                        AuthBottomLinks(
+                          onSignUp: _navigateToSignUp,
+                          onForgotPassword: _navigateToForgotPassword,
+                          onHelp: _showHelpDialog,
+                        ),
+                        
+                        const SizedBox(height: AppSizes.spaceLg),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSocialLoginView() {
+    return SocialLoginSection(
+      key: const ValueKey('social_login'),
+      onGoogleLogin: _onGoogleLogin,
+      onEmailLoginToggle: _toggleLoginMethod,
+    );
+  }
+
+  Widget _buildEmailLoginView(AsyncValue<void> authState) {
+    return EmailLoginForm(
+      key: const ValueKey('email_login'),
+      onLogin: _onEmailLogin,
+      onBackToSocial: _toggleLoginMethod,
+      isLoading: authState.isLoading,
+    );
+  }
+
+  // Event Handlers
+  void _setupAuthListener() {
+    ref.listen(authProvider, (previous, next) {
+      next.whenOrNull(
+        error: (error, _) => _showSnackBar(error.toString(), AppColors.error),
+        data: (_) => _showSnackBar('환영합니다!', AppColors.success),
+      );
+    });
+  }
+
+  void _onGoogleLogin() {
+    _showSnackBar('구글 로그인 기능은 곧 추가될 예정입니다', AppColors.success);
+  }
+
+  void _onEmailLogin(String email, String password) {
+    ref.read(authProvider.notifier).login(email, password);
+  }
+
+  void _toggleLoginMethod() {
+    setState(() {
+      _isEmailLogin = !_isEmailLogin;
+    });
+  }
+
+  void _navigateToSignUp() {
+    NavigationHelper.slideToPage(context, const SignUpScreen());
+  }
+
+  void _navigateToForgotPassword() {
+    NavigationHelper.slideToPage(context, const ForgotPasswordScreen());
+  }
+
+  void _showHelpDialog() {
+    _showSnackBar('고객센터 기능은 곧 추가될 예정입니다', AppColors.info);
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
     );
   }
 }
